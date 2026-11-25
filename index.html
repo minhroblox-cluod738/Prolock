@@ -243,13 +243,16 @@ $('gp').onclick=e=>{const o=e.target.closest('.op');if(!o)return;gs[o.dataset.k]
 $('gg').onclick=()=>{const b=$('gg');if(b.dataset.l)return;const{os,ver}=gs,nm=NAME[ver];b.dataset.l=1;b.textContent='⏳ ĐANG MỞ '+nm.toUpperCase()+'...';
 toast(`Đang vào ${nm} (${os=='ios'?'iOS':'Android'})...`,'info','🚀');
 let left=0;const lv=()=>{if(document.hidden)left=1};document.addEventListener('visibilitychange',lv);addEventListener('pagehide',lv);
-if(os=='android'){const p=GAME.android[ver],fb=encodeURIComponent('https://play.google.com/store/apps/details?id='+p);
- // chưa cài game -> Chrome tự chuyển sang Google Play
- const url=`intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${p};S.browser_fallback_url=${fb};end`;
- if(/; wv\)|Version\/[\d.]+ Chrome/i.test(navigator.userAgent)){/* đang chạy trong WebView của app: không điều hướng trang chính để tránh trang lỗi */
-  const f=document.createElement('iframe');f.style.display='none';f.src=url;document.body.appendChild(f);setTimeout(()=>f.remove(),3000);
-  setTimeout(()=>{if(!left)toast('App này không cho mở game trực tiếp. Hãy mở trang bằng Chrome rồi bấm lại.','err')},2500)}
- else location.href=url}
+if(os=='android'){const p=GAME.android[ver],sc=GAME.ios[ver].scheme,fb=encodeURIComponent('https://play.google.com/store/apps/details?id='+p);
+ // Android: mở thẳng bằng scheme của game (giống chế độ iOS), không cần bấm "Chơi" trên CH Play
+ const playUrl=`intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${p};S.browser_fallback_url=${fb};end`;
+ const directUrl=`intent://#Intent;scheme=${sc.replace('://','')};package=${p};S.browser_fallback_url=${fb};end`;
+ const ifr=u=>{const f=document.createElement('iframe');f.style.display='none';f.src=u;document.body.appendChild(f);setTimeout(()=>f.remove(),3000)};
+ if(/; wv\)|Version\/[\d.]+ Chrome/i.test(navigator.userAgent)){
+  ifr(sc);
+  setTimeout(()=>{if(!left)ifr(playUrl)},1600);
+  setTimeout(()=>{if(!left)toast(`Không mở được ${nm}. Kiểm tra game đã cài chưa.`,'err')},2700)}
+ else location.href=directUrl}
 else{const f=document.createElement('iframe');f.style.display='none';f.src=GAME.ios[ver].scheme;document.body.appendChild(f);setTimeout(()=>f.remove(),3000)}
 setTimeout(()=>{document.removeEventListener('visibilitychange',lv);removeEventListener('pagehide',lv);delete b.dataset.l;b.textContent='🚀 VÀO GAME NGAY';
  if(!left&&os=='ios'){toast(`Không mở được ${nm}. Đang mở App Store...`,'err');setTimeout(()=>{location.href=GAME.ios[ver].store},1200)}},2800)};
